@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>0〜2歳 観察型MBTI診断</title>
+<style>
+  :root{
+    --bg:#fffaf4; --ink:#1f2a37; --muted:#5b6472;
+    --card:#ffffff; --border:#f0f2f5; --shadow:0 6px 20px rgba(31,42,55,.08);
+    --btn:#1f2a37; --btn-ink:#fff;
+    --progress:#8b5cf6;
+    --pill:#f7fafc; --pill-border:#e6eef7;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;color:var(--ink);background:
+      radial-gradient(1200px 1200px at 10% -10%, #fff1e6 0%, rgba(255,241,230,0) 60%),
+      radial-gradient(1200px 1200px at 110% 10%, #e7f8ff 0%, rgba(231,248,255,0) 60%),
+      var(--bg);
+    font-family:"Noto Sans JP", system-ui, -apple-system, "Hiragino Kaku Gothic ProN","Yu Gothic", sans-serif;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:18px}
+  header{padding:6px 0 10px}
+  h1{margin:0 0 6px;font-size:1.45rem;letter-spacing:.3px}
+  .sub{color:var(--muted);font-size:.96rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+  .pill{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:6px 10px;background:var(--pill);border:1px solid var(--pill-border);font-size:.82rem;color:#3d4854}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+  .progress{height:12px;border-radius:999px;background:#eff3f7;overflow:hidden;border:1px solid #e8edf3}
+  .bar{height:100%;width:0;background:var(--progress);transition:width .25s ease}
+  .qno{color:var(--muted);font-size:.92rem}
+  .question{font-size:1.12rem;margin:8px 0 14px;line-height:1.55}
+  .row{display:flex;gap:12px}
+  .col{flex:1}
+  .btn{
+    width:100%;padding:14px 16px;border-radius:14px;border:1px solid #e6ebf1;background:#fff;
+    font-size:1.06rem;line-height:1.4;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.03)
+  }
+  .btn:hover{filter:brightness(0.98)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+  .cta{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+  .center{display:flex;gap:8px;align-items:center;justify-content:center}
+  .hint{background:#f9fbff;border:1px solid #e6f0ff;border-radius:14px;padding:12px}
+  .small{font-size:.9rem;color:var(--muted)}
+  .result-type{font-size:1.7rem;margin:8px 0}
+  .type-pill{display:inline-block;border-radius:12px;padding:6px 10px;background:#eef6ff;border:1px solid #d9ecff;font-weight:700}
+  .grid{display:grid;gap:10px}
+  @media(min-width:640px){.grid{grid-template-columns:1fr 1fr}}
+  footer{margin:18px 0 8px;color:var(--muted);font-size:.85rem}
+  .ghost{opacity:.55}
+  /* カテゴリごとのアクセント（EI/SN/FT/JPで切替） */
+  .theme-ei{--progress:#ff9f6e; --btn:#ff7a3d}
+  .theme-sn{--progress:#5dd4c6; --btn:#28bdb0}
+  .theme-ft{--progress:#ff88b5; --btn:#ff5a94}
+  .theme-jp{--progress:#7ea6ff; --btn:#4b82ff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>０〜２歳 観察型MBTI診断</h1>
+    <div class="sub">保護者・保育者向け。目の前の行動からA/Bで選ぶだけ（40問）</div>
+  </header>
+
+  <!-- TOP -->
+  <section id="page-top" class="card">
+    <div class="badges">
+      <span class="pill">対象：0–2歳</span>
+      <span class="pill">スマホOK</span>
+      <span class="pill">自動判定</span>
+    </div>
+    <p class="small" style="margin-top:6px">E/I・S/N・F/T・J/P 各10問。カテゴリごとに色が変わって直感的！</p>
+    <div class="cta">
+      <button class="btn primary" id="startBtn">診断をはじめる</button>
+      <button class="btn" id="resumeBtn" title="前回の続きがある場合のみ有効">前回の続きから</button>
+    </div>
+  </section>
+
+  <!-- 質問 -->
+  <section id="page-quiz" class="card theme-ei" style="display:none">
+    <div class="qno" id="qIndex">質問 1 / 40</div>
+    <div class="badges">
+      <span class="pill" id="badgeCat">E / I</span>
+      <span class="pill" id="badgeScene">場面</span>
+    </div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="question" id="qText">ここに質問</div>
+    <div class="row">
+      <button class="btn col" id="btnA">A</button>
+      <button class="btn col" id="btnB">B</button>
+    </div>
+    <div class="cta">
+      <button class="btn" id="backBtn">◀ 戻る</button>
+      <button class="btn primary" id="skipBtn">スキップ</button>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="page-result" class="card" style="display:none">
+    <div class="qno">診断結果</div>
+    <div class="result-type"><span class="type-pill" id="type4"></span></div>
+    <div class="grid" style="margin-bottom:4px">
+      <div><strong>E/I</strong>：<span id="scoreEI"></span></div>
+      <div><strong>S/N</strong>：<span id="scoreSN"></span></div>
+      <div><strong>F/T</strong>：<span id="scoreFT"></span></div>
+      <div><strong>J/P</strong>：<span id="scoreJP"></span></div>
+    </div>
+    <div id="typeName" style="font-weight:700;margin:6px 0 6px"></div>
+    <div id="typeOneLiner" class="small" style="margin-bottom:10px"></div>
+    <div class="hint">
+      <div style="font-weight:700;margin-bottom:6px">関わりのヒント</div>
+      <div id="typeHint"></div>
+    </div>
+    <div class="cta" style="margin-top:14px">
+      <button class="btn" id="retryBtn">もう一度診断する</button>
+      <button class="btn" id="seeAllBtn">他タイプの解説を見る</button>
+    </div>
+    <div class="small" style="margin-top:12px">
+      ※ 子どもの性格はまだまだ成長の途中。タイプは変化することもあります。<br>
+      今の“らしさ”を知るヒントとして、ゆったり見守っていきましょう🌱
+    </div>
+  </section>
+
+  <!-- 16タイプ解説 -->
+  <section id="page-all" class="card" style="display:none">
+    <div class="qno">16タイプ解説（0〜2歳向け）</div>
+    <div id="typesGrid" class="grid"></div>
+    <div class="cta">
+      <button class="btn" id="backHomeBtn">トップへ戻る</button>
+    </div>
+  </section>
+
+  <footer>© 観察型MBTI for 0–2歳</footer>
+</div>
+
+<script>
+/* ---------- 観察しやすい新質問セット（各10問） ---------- */
+const QUESTIONS = [
+  /* E/I */
+  {cat:'EI', scene:'園庭に出た直後', q:'A：すぐに周りへ歩いて行く（E） / B：しばらく大人のそばで様子を見る（I）', Ais:'E', Bis:'I', A:'すぐ歩いて行く（E）', B:'そばで様子を見る（I）'},
+  {cat:'EI', scene:'初めて会う大人', q:'A：自分から近づき笑顔（E） / B：肩越しにじっと見る（I）', Ais:'E', Bis:'I', A:'近づき笑顔（E）', B:'肩越しに観察（I）'},
+  {cat:'EI', scene:'にぎやかな部屋', q:'A：音や声に弾む反応（E） / B：音の方を静かに観察（I）', Ais:'E', Bis:'I', A:'弾む反応（E）', B:'静かに観察（I）'},
+  {cat:'EI', scene:'他児が笑っている', q:'A：すぐにつられて笑う（E） / B：表情を見てから微笑む（I）', Ais:'E', Bis:'I', A:'つられて笑う（E）', B:'様子見て微笑む（I）'},
+  {cat:'EI', scene:'おもちゃ発見', q:'A：誰かに見せに行く（E） / B：黙々と触って確かめる（I）', Ais:'E', Bis:'I', A:'見せに行く（E）', B:'黙々と確かめる（I）'},
+  {cat:'EI', scene:'名前を呼ばれる', q:'A：すぐ振り向き近づく（E） / B：一拍おき視線だけ向ける（I）', Ais:'E', Bis:'I', A:'すぐ近づく（E）', B:'視線だけ向ける（I）'},
+  {cat:'EI', scene:'新しい場所', q:'A：範囲を広げ探索（E） / B：小さな範囲でゆっくり確認（I）', Ais:'E', Bis:'I', A:'広く探索（E）', B:'小さく確認（I）'},
+  {cat:'EI', scene:'注目された時', q:'A：得意そうに反応増（E） / B：視線を外す・体を引く（I）', Ais:'E', Bis:'I', A:'反応が増える（E）', B:'視線外す/引く（I）'},
+  {cat:'EI', scene:'知らない子が接近', q:'A：前へ向け関わる（E） / B：後ろへ引き距離をとる（I）', Ais:'E', Bis:'I', A:'前向き関わる（E）', B:'距離をとる（I）'},
+  {cat:'EI', scene:'お迎えの人が増えた', q:'A：人から人へ移り関わる（E） / B：安心できる大人に張りつく（I）', Ais:'E', Bis:'I', A:'次々関わる（E）', B:'安心な大人へ（I')},
+
+  /* S/N */
+  {cat:'SN', scene:'積み木', q:'A：同じ形をまっすぐ積む（S） / B：動物や車に見立てて並べる（N）', Ais:'S', Bis:'N', A:'まっすぐ積む（S）', B:'見立てて並べる（N）'},
+  {cat:'SN', scene:'絵本', q:'A：絵の物を指さし確認（S） / B：場面のごっこ声や表情を作る（N）', Ais:'S', Bis:'N', A:'指さし確認（S）', B:'表情・声でごっこ（N）'},
+  {cat:'SN', scene:'コップとスプーン', q:'A：実物どおりに使う（S） / B：電話・ドラムなど別物に見立て（N）', Ais:'S', Bis:'N', A:'実物どおり（S）', B:'別物に見立て（N）'},
+  {cat:'SN', scene:'いないいないばあ', q:'A：同じタイミングで毎回大喜び（S） / B：タイミング変えるとより反応（N）', Ais:'S', Bis:'N', A:'同じで喜ぶ（S）', B:'変化で喜ぶ（N）'},
+  {cat:'SN', scene:'道で車が通る', q:'A：音や色・大きさに注目（S） / B：運転や行き先を真似して遊ぶ（N）', Ais:'S', Bis:'N', A:'音や色へ注目（S）', B:'運転ごっこ（N）'},
+  {cat:'SN', scene:'ブロックの色', q:'A：色や形の違いにすぐ気づく（S） / B：色をキャラに当て物語にする（N）', Ais:'S', Bis:'N', A:'違いに気づく（S）', B:'色で物語（N）'},
+  {cat:'SN', scene:'クレヨン', q:'A：線・点を繰り返す（S） / B：「雨」「くるま」など意味づけ（N）', Ais:'S', Bis:'N', A:'線・点を反復（S）', B:'意味づけ描く（N）'},
+  {cat:'SN', scene:'音のなるおもちゃ', q:'A：押す→鳴るの因果を楽しむ（S） / B：音に合わせ踊る・場面を作る（N）', Ais:'S', Bis:'N', A:'因果を楽しむ（S）', B:'音で場面づくり（N）'},
+  {cat:'SN', scene:'おままごと', q:'A：見た手順をそのまま再現（S） / B：空の皿でも「食べるふり」を広げる（N）', Ais:'S', Bis:'N', A:'手順を再現（S）', B:'ふりで広げる（N）'},
+  {cat:'SN', scene:'新しいおもちゃ', q:'A：まず触って確かめる（S） / B：触る前に使い方を想像し試す（N）', Ais:'S', Bis:'N', A:'触って確かめる（S）', B:'想像して試す（N')},
+
+  /* F/T */
+  {cat:'FT', scene:'近くで泣き声', q:'A：顔を曇らせ近づく・なでる（F） / B：周りを見回し大人の方を見る（T）', Ais:'F', Bis:'T', A:'寄り添い近づく（F）', B:'大人へサイン（T）'},
+  {cat:'FT', scene:'取り合い', q:'A：相手の様子を気にして引く（F） / B：元の持ち主や順番を確認（T）', Ais:'F', Bis:'T', A:'相手を気にする（F）', B:'順番を確認（T）'},
+  {cat:'FT', scene:'注意された', q:'A：しょんぼり・抱っこを求める（F） / B：一瞬停止して行動を変える（T）', Ais:'F', Bis:'T', A:'しょんぼり寄る（F）', B:'行動を変える（T）'},
+  {cat:'FT', scene:'誰かが転んだ', q:'A：覗き込みそばに座る（F） / B：ティッシュを取る・大人を指さす（T）', Ais:'F', Bis:'T', A:'そばに座る（F）', B:'対処へ動く（T）'},
+  {cat:'FT', scene:'大人の声色が変わる', q:'A：表情が影響されやすい（F） / B：指示の内容に反応（T）', Ais:'F', Bis:'T', A:'声色に影響（F）', B:'内容に反応（T）'},
+  {cat:'FT', scene:'ごっこ遊び', q:'A：「よしよし」「どうしたの？」が多い（F） / B：「こうやる」「次はこれ」が多い（T）', Ais:'F', Bis:'T', A:'よしよし多い（F）', B:'手順多い（T）'},
+  {cat:'FT', scene:'笑いが起きた', q:'A：一緒に笑い共有を優先（F） / B：何が起きたか確かめる（T）', Ais:'F', Bis:'T', A:'共有して笑う（F）', B:'理由を確かめる（T）'},
+  {cat:'FT', scene:'順番待ち', q:'A：「待つのたいへんだね」風の寄り添い（F） / B：順番の合図や秩序に注目（T）', Ais:'F', Bis:'T', A:'気持ちに寄り添う（F）', B:'秩序に注目（T）'},
+  {cat:'FT', scene:'玩具が壊れた', q:'A：困った表情で慰めを求める（F） / B：原因を見て直そうとする（T）', Ais:'F', Bis:'T', A:'慰め求める（F）', B:'直そうとする（T）'},
+  {cat:'FT', scene:'ケンカのあと', q:'A：なでる・抱きつく等の仲直り行動（F） / B：原因やきっかけを指さし確認（T）', Ais:'F', Bis:'T', A:'仲直り行動（F）', B:'原因を確認（T')},
+
+  /* J/P */
+  {cat:'JP', scene:'おやつ前', q:'A：呼ばれる前から席へ向かう（J） / B：声かけで気づき席へ（P）', Ais:'J', Bis:'P', A:'自分で席へ（J）', B:'声かけで席へ（P）'},
+  {cat:'JP', scene:'いつもの支度', q:'A：決まった順番で進める（J） / B：気になった物から手を出す（P）', Ais:'J', Bis:'P', A:'順番で進める（J）', B:'気になった物から（P）'},
+  {cat:'JP', scene:'遊びの切り替え', q:'A：「おしまい」の合図で片づけ（J） / B：「もう一回！」が続きやすい（P）', Ais:'J', Bis:'P', A:'合図で片づけ（J）', B:'もう一回続く（P）'},
+  {cat:'JP', scene:'置き場所', q:'A：元の場所へ戻す（J） / B：近くにポンと置きがち（P）', Ais:'J', Bis:'P', A:'元の場所へ（J）', B:'近くに置く（P）'},
+  {cat:'JP', scene:'予定変更', q:'A：不安げ・予告で落ち着く（J） / B：すぐ新しい方へ乗り換える（P）', Ais:'J', Bis:'P', A:'予告で安心（J）', B:'すぐ乗り換え（P）'},
+  {cat:'JP', scene:'活動中の視線', q:'A：次の展開をちらちら確認（J） / B：目の前に夢中で続ける（P）', Ais:'J', Bis:'P', A:'次を確認（J）', B:'目の前に夢中（P）'},
+  {cat:'JP', scene:'片づけ指示', q:'A：区切って順に進めるとスムーズ（J） / B：合図より面白さで動く（P）', Ais:'J', Bis:'P', A:'区切ると進む（J）', B:'面白さ優先（P）'},
+  {cat:'JP', scene:'新しい遊び', q:'A：やり方を見てから取り組む（J） / B：触りながら覚える（P）', Ais:'J', Bis:'P', A:'見てから（J）', B:'触りながら（P）'},
+  {cat:'JP', scene:'朝の流れ', q:'A：決まったルーティンで安心（J） / B：その日の気分で変わる（P）', Ais:'J', Bis:'P', A:'ルーティン安心（J）', B:'気分で変わる（P）'},
+  {cat:'JP', scene:'保育室の出入り', q:'A：靴・荷物の順番が整うと動きやすい（J） / B：気づいた順に動き出す（P）', Ais:'J', Bis:'P', A:'整うと動ける（J）', B:'気づいた順に動く（P')}
+];
+
+/* 16タイプの短い解説 */
+const TYPE_TEXT = {
+  ENFP:{name:'わくわく好奇心タイプ', one:'「やってみたい！」の芽がいっぱい。', hint:'否定せず共感し、自由な発見を応援。'},
+  ENFJ:{name:'思いやりリーダータイプ', one:'周りを笑顔にするやさしさ。', hint:'「うれしいね」「ありがとう」と気持ちを言葉に。'},
+  INFJ:{name:'心で寄りそうタイプ', one:'静かに人の気持ちを感じ取る繊細さん。', hint:'穏やかな時間と安心できる抱っこを。'},
+  INFP:{name:'夢見がちな思いやりタイプ', one:'マイペースで空想も大好き。', hint:'気持ちを受け止めるだけで花が咲く🌷'},
+  ENTP:{name:'アイデア発明タイプ', one:'触って確かめる、ひらめきの天才。', hint:'「やってみよう！」と探求を一緒に。'},
+  ENTJ:{name:'行動リーダータイプ', one:'「こうしたい！」がはっきり、行動も早い。', hint:'「どうしたい？」と意思を引き出す。'},
+  INTJ:{name:'静かなる計画タイプ', one:'じっくり観察する小さな戦略家。', hint:'急かさず見守る時間がカギ。'},
+  INTP:{name:'考える研究タイプ', one:'物の仕組みに興味津々。', hint:'話しかけすぎず、集中をそっと支える。'},
+  ESFP:{name:'ごきげんムードメーカー', one:'明るくノリよく、みんなを笑顔に。', hint:'一緒に笑って楽しむ時間が栄養。'},
+  ESTP:{name:'やってみたいチャレンジャー', one:'体で覚えるスピード派。', hint:'「危ない！」より「どうしたら安全？」で導く。'},
+  ISFP:{name:'やさしい感性タイプ', one:'穏やかで感受性豊か。', hint:'無理に関わらず、寄り添う時間を。'},
+  ISFJ:{name:'おだやかサポートタイプ', one:'空気を感じ取る思いやりの子。', hint:'「見てたよ」「ありがとう」で安心感。'},
+  ESTJ:{name:'きっちり安心タイプ', one:'順番・ルールで落ち着く。', hint:'予告と見通しで安心のリズムを。'},
+  ESFJ:{name:'お世話好きタイプ', one:'みんなと一緒がうれしい。', hint:'「助けてくれてうれしい」と感謝を伝える。'},
+  ISTJ:{name:'ていねい整理タイプ', one:'決まった順番ときっちりが好き。', hint:'突然の変化より、予告を大切に。'},
+  ISTP:{name:'静かな探検タイプ', one:'無言で観察、納得したら即行動。', hint:'邪魔せず見守り、できた瞬間を褒める。'},
+};
+
+/* UI参照 */
+const $ = sel => document.querySelector(sel);
+const els = {
+  top: $('#page-top'),
+  quiz: $('#page-quiz'),
+  result: $('#page-result'),
+  all: $('#page-all'),
+  startBtn: $('#startBtn'),
+  resumeBtn: $('#resumeBtn'),
+  backHomeBtn: $('#backHomeBtn'),
+  retryBtn: $('#retryBtn'),
+  seeAllBtn: $('#seeAllBtn'),
+  qIndex: $('#qIndex'),
+  badgeCat: $('#badgeCat'),
+  badgeScene: $('#badgeScene'),
+  qText: $('#qText'),
+  btnA: $('#btnA'),
+  btnB: $('#btnB'),
+  backBtn: $('#backBtn'),
+  skipBtn: $('#skipBtn'),
+  bar: $('#bar'),
+  type4: $('#type4'),
+  scoreEI: $('#scoreEI'),
+  scoreSN: $('#scoreSN'),
+  scoreFT: $('#scoreFT'),
+  scoreJP: $('#scoreJP'),
+  typeName: $('#typeName'),
+  typeOneLiner: $('#typeOneLiner'),
+  typeHint: $('#typeHint'),
+  typesGrid: $('#typesGrid'),
+};
+const TOTAL = QUESTIONS.length;
+let idx = 0;
+let answers = Array(TOTAL).fill(null);
+let scores = {E:0,I:0,S:0,N:0,F:0,T:0,J:0,P:0};
+
+function saveState(){ localStorage.setItem('mbti02_state', JSON.stringify({idx,answers,scores})); }
+function loadState(){
+  const raw = localStorage.getItem('mbti02_state'); if(!raw) return false;
+  try{ const s=JSON.parse(raw); idx=s.idx??0; answers=s.answers??answers; scores=s.scores??scores; return true; }catch(e){ return false; }
+}
+function resetAll(){ idx=0; answers=Array(TOTAL).fill(null); scores={E:0,I:0,S:0,N:0,F:0,T:0,J:0,P:0}; saveState(); }
+function show(page){
+  els.top.style.display = (page==='top')?'block':'none';
+  els.quiz.style.display = (page==='quiz')?'block':'none';
+  els.result.style.display = (page==='result')?'block':'none';
+  els.all.style.display = (page==='all')?'block':'none';
+}
+function start(){ resetAll(); show('quiz'); renderQuestion(); }
+function resume(){ if(loadState()){ show('quiz'); renderQuestion(); } else { alert('前回の続きはありません。'); start(); }}
+
+/* カテゴリ色切替 */
+function applyTheme(cat){
+  els.quiz.classList.remove('theme-ei','theme-sn','theme-ft','theme-jp');
+  if(cat==='EI') els.quiz.classList.add('theme-ei');
+  if(cat==='SN') els.quiz.classList.add('theme-sn');
+  if(cat==='FT') els.quiz.classList.add('theme-ft');
+  if(cat==='JP') els.quiz.classList.add('theme-jp');
+}
+
+/* 出題表示 */
+function renderQuestion(){
+  const q = QUESTIONS[idx];
+  els.qIndex.textContent = `質問 ${idx+1} / ${TOTAL}`;
+  els.badgeCat.textContent = labelCat(q.cat);
+  els.badgeScene.textContent = `場面：${q.scene}`;
+  els.qText.textContent = q.q;
+  els.btnA.textContent = 'A　' + (q.A ?? '');
+  els.btnB.textContent = 'B　' + (q.B ?? '');
+  const pct = Math.round(idx/TOTAL*100); els.bar.style.width = pct + '%';
+  applyTheme(q.cat);
+  saveState();
+}
+function labelCat(cat){ return ({EI:'E / I',SN:'S / N',FT:'F / T',JP:'J / P'})[cat] || cat; }
+
+/* 採点 */
+function applyScore(q, choice){
+  const prev = answers[idx];
+  if(prev==='A'){ scores[q.Ais] = Math.max(0, scores[q.Ais]-1); }
+  if(prev==='B'){ scores[q.Bis] = Math.max(0, scores[q.Bis]-1); }
+  answers[idx] = choice;
+  if(choice==='A') scores[q.Ais] += 1;
+  if(choice==='B') scores[q.Bis] += 1;
+}
+function next(){ if(idx<TOTAL-1){ idx++; renderQuestion(); } else { showResult(); } }
+function back(){ if(idx>0){ idx--; renderQuestion(); } }
+function skip(){ answers[idx]='-'; next(); }
+
+/* 結果 */
+function showResult(){
+  const EI = scores.E >= scores.I ? 'E' : 'I';
+  const SN = scores.S >= scores.N ? 'S' : 'N';
+  const FT = scores.F >= scores.T ? 'F' : 'T';
+  const JP = scores.J >= scores.P ? 'J' : 'P';
+  const type = EI+SN+FT+JP;
+  els.type4.textContent = type;
+  els.scoreEI.textContent = `E ${scores.E} : I ${scores.I}`;
+  els.scoreSN.textContent = `S ${scores.S} : N ${scores.N}`;
+  els.scoreFT.textContent = `F ${scores.F} : T ${scores.T}`;
+  els.scoreJP.textContent = `J ${scores.J} : P ${scores.P}`;
+  const t = TYPE_TEXT[type];
+  if(t){ els.typeName.textContent = `${t.name}（${type}）`; els.typeOneLiner.textContent = t.one; els.typeHint.textContent = t.hint; }
+  else{ els.typeName.textContent = `（${type}）`; els.typeOneLiner.textContent='どちらの傾向もあります。発達の途中かも🌱'; els.typeHint.textContent='日々の観察を続け、安心のリズムと選択肢を用意してみましょう。'; }
+  show('result'); saveState();
+}
+
+/* 16タイプ一覧 */
+function renderAllTypes(){
+  const frag = document.createDocumentFragment();
+  Object.entries(TYPE_TEXT).forEach(([k,v])=>{
+    const div = document.createElement('div');
+    div.className = 'hint';
+    div.innerHTML = `<div style="font-weight:700;margin-bottom:4px">${k}：${v.name}</div>
+      <div class="small" style="margin-bottom:6px">${v.one}</div>
+      <div>${v.hint}</div>`;
+    frag.appendChild(div);
+  });
+  els.typesGrid.innerHTML=''; els.typesGrid.appendChild(frag);
+}
+
+/* イベント */
+els.startBtn.addEventListener('click', start);
+els.resumeBtn.addEventListener('click', resume);
+els.backHomeBtn.addEventListener('click', ()=>show('top'));
+els.retryBtn.addEventListener('click', start);
+els.seeAllBtn.addEventListener('click', ()=>{ renderAllTypes(); show('all'); });
+els.btnA.addEventListener('click', ()=>{ const q=QUESTIONS[idx]; applyScore(q,'A'); next(); });
+els.btnB.addEventListener('click', ()=>{ const q=QUESTIONS[idx]; applyScore(q,'B'); next(); });
+els.backBtn.addEventListener('click', back);
+els.skipBtn.addEventListener('click', skip);
+
+/* 初期化 */
+(function init(){
+  if(!localStorage.getItem('mbti02_state')) els.resumeBtn.classList.add('ghost');
+})();
+</script>
+</body>
+</html>
